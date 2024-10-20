@@ -4,6 +4,13 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 jobs:
   test:
     timeout-minutes: 60
@@ -25,3 +32,20 @@ jobs:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
+    # Configure Pages
+    - name: Configure GitHub Pages
+      uses: actions/configure-pages@v3
+    # Upload the report as a pages artifact
+    - name: Upload Pages Artifact
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: playwright-report/
+  deploy:
+    needs: test
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v2        
